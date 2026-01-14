@@ -1,28 +1,39 @@
 public class StockMovementService
 {
-    private static List<StockMovement> movements = new();
-    private static int nextId = 1;
+
+    private readonly AppDbContext _context;
+
+    public StockMovementService(AppDbContext context)
+    {
+        _context = context;
+    }
 
     public void AddMovement(StockMovement movement)
     {
-        movement.Id = nextId++;
         movement.Date = DateTime.UtcNow;
-        movements.Add(movement);
+        _context.StockMovements.Add(movement);
+        _context.SaveChanges();
+        
     }
 
-    public int GetStock(int productId)
+     public int GetStock(int productId)
     {
-        var entradas = movements
+        var inQty = _context.StockMovements
             .Where(m => m.ProductId == productId && m.Type == "IN")
             .Sum(m => m.Quantity);
 
-        var salidas = movements
+        var outQty = _context.StockMovements
             .Where(m => m.ProductId == productId && m.Type == "OUT")
             .Sum(m => m.Quantity);
 
-        return entradas - salidas;
+        return inQty - outQty;
     }
 
     public List<StockMovement> GetByProduct(int productId)
-        => movements.Where(m => m.ProductId == productId).ToList();
+    {
+        return _context.StockMovements
+            .Where(m => m.ProductId == productId)
+            .OrderByDescending(m => m.Date)
+            .ToList();
+    }
 }

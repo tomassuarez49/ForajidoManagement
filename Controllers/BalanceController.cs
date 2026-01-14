@@ -4,19 +4,25 @@ using Microsoft.AspNetCore.Mvc;
 [Route("api/balance")]
 public class BalanceController : ControllerBase
 {
-    private readonly BalanceService _balanceService = new();
+    private readonly BalanceService _balanceService;
 
-    // Balance simple (ingresos - egresos)
+    //  Inyección de dependencias
+    public BalanceController(BalanceService balanceService)
+    {
+        _balanceService = balanceService;
+    }
+
+    //  Balance básico (ingresos - egresos)
     [HttpGet]
     public IActionResult GetBalance()
     {
         return Ok(_balanceService.GetBalance());
     }
 
-    // 🔥 Balance real (incluye costo de productos vendidos)
+    //  Balance real (ingresos - costo productos - gastos)
     [HttpGet("real")]
     public IActionResult GetRealBalance()
     {
-        return Ok(_balanceService.GetRealProfit());
+        return Ok(_balanceService.GetRealBalance());
     }
 }

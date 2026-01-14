@@ -1,15 +1,21 @@
+using Microsoft.EntityFrameworkCore;
+
 public class BalanceService
 {
-    private readonly SaleService _saleService = new();
-    private readonly ExpenseService _expenseService = new();
-    private readonly InventoryService _productService = new();
+    private readonly AppDbContext _context;
 
+    public BalanceService(AppDbContext context)
+    {
+        _context = context;
+    }
+
+    //  Balance básico (ingresos - egresos)
     public BalanceSummary GetBalance()
     {
-        var totalIncome = _saleService.GetAll()
+        var totalIncome = _context.Sales
             .Sum(s => s.Total);
 
-        var totalExpenses = _expenseService.GetAll()
+        var totalExpenses = _context.Expenses
             .Sum(e => e.Amount);
 
         return new BalanceSummary
@@ -19,29 +25,31 @@ public class BalanceService
         };
     }
 
-    // Balance con utilidad real (ingreso - costo - gastos)
-    public BalanceSummary GetRealProfit()
+    //  Balance real (ingresos - costo productos - gastos)
+    public BalanceSummary GetRealBalance()
     {
-        decimal totalCost = 0;
+        //  Ingresos
+        var income = _context.Sales
+            .Sum(s => s.Total);
 
-        foreach (var sale in _saleService.GetAll())
-        {
-            foreach (var item in sale.Items)
-            {
-                var product = _productService.GetById(item.ProductId);
-                if (product == null) continue;
+        //  Gastos
+        var expenses = _context.Expenses
+            .Sum(e => e.Amount);
 
-                totalCost += item.Quantity * product.PurchasePrice;
-            }
-        }
-
-        var income = _saleService.GetAll().Sum(s => s.Total);
-        var expenses = _expenseService.GetAll().Sum(e => e.Amount);
+        //  Costo de productos vendidos
+        var productCost = _context.SaleItems
+            .Join(
+                _context.Products,
+                item => item.ProductId,
+                product => product.Id,
+                (item, product) => item.Quantity * product.PurchasePrice
+            )
+            .Sum();
 
         return new BalanceSummary
         {
             TotalIncome = income,
-            TotalExpenses = expenses + totalCost
+            TotalExpenses = expenses + productCost
         };
     }
 }

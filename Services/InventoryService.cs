@@ -1,26 +1,29 @@
 public class InventoryService
 {
-    private static List<Product> products = new();
-    private static int nextId = 1;
+    private readonly AppDbContext _context;
 
+    public InventoryService(AppDbContext context)
+    {
+        _context = context;
+    }
     // CREATE
     public Product Create(Product product)
     {
-        product.Id = nextId++;
-        products.Add(product);
+        _context.Products.Add(product);
+        _context.SaveChanges();
         return product;
     }
 
     // READ - ALL
     public List<Product> GetAll()
     {
-        return products;
+        return _context.Products.ToList();
     }
 
     // READ - BY ID
     public Product? GetById(int id)
     {
-        return products.FirstOrDefault(p => p.Id == id);
+        return _context.Products.FirstOrDefault(p => p.Id == id);
     }
 
     // UPDATE
@@ -35,6 +38,8 @@ public class InventoryService
         product.SalePrice = updatedProduct.SalePrice;
         product.PurchasePrice = updatedProduct.PurchasePrice;
 
+        _context.SaveChanges();
+
         return true;
     }
 
@@ -45,7 +50,8 @@ public class InventoryService
         if (product == null)
             return false;
 
-        products.Remove(product);
+        _context.Products.Remove(product);
+        _context.SaveChanges();
         return true;
     }
 }

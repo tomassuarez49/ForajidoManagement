@@ -1,63 +1,42 @@
 using Microsoft.AspNetCore.Mvc;
-
-
-
 [ApiController]
 [Route("api/products")]
 public class ProductsController : ControllerBase
 {
-    private readonly InventoryService _inventoryService;
+    private readonly InventoryService _service;
 
-    public ProductsController()
+    public ProductsController(InventoryService service)
     {
-        _inventoryService = new InventoryService();
+        _service = service;
     }
 
-    // GET: api/products
-    [HttpGet]
-    public IActionResult GetAll()
-    {
-        return Ok(_inventoryService.GetAll());
-    }
-
-    // GET: api/products/
-    [HttpGet("{id}")]
-    public IActionResult GetById(int id)
-    {
-        var product = _inventoryService.GetById(id);
-        if (product == null)
-            return NotFound();
-
-        return Ok(product);
-    }
-
-    // POST: api/products
     [HttpPost]
     public IActionResult Create(Product product)
-    {
-        var created = _inventoryService.Create(product);
-        return Ok(created);
-    }
+        => Ok(_service.Create(product));
 
-    // PUT: api/products/
+    [HttpGet]
+    public IActionResult GetAll()
+        => Ok(_service.GetAll());
+
+    // ✅ UPDATE
     [HttpPut("{id}")]
     public IActionResult Update(int id, Product product)
     {
-        var updated = _inventoryService.Update(id, product);
+        var updated = _service.Update(id, product);
         if (!updated)
             return NotFound();
 
-        return NoContent();
+        return NoContent(); // 204
     }
 
-    // DELETE: api/products/
+    // ✅ DELETE
     [HttpDelete("{id}")]
     public IActionResult Delete(int id)
     {
-        var deleted = _inventoryService.Delete(id);
+        var deleted = _service.Delete(id);
         if (!deleted)
             return NotFound();
 
-        return NoContent();
+        return NoContent(); // 204
     }
 }

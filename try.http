@@ -28,6 +28,17 @@ Content-Type: application/json
   "salePrice": 6000
 }
 
+### Crear otro producto
+POST {{host}}/api/products
+Content-Type: application/json
+
+{
+  "name": "Cerveza Club Colombia Trigo",
+  "category": "Bebida",
+  "purchasePrice": 2500,
+  "salePrice": 6000
+}
+
 ###
 
 ### Obtener todos los productos
@@ -44,7 +55,7 @@ POST {{host}}/api/stock
 Content-Type: application/json
 
 {
-  "productId": 1,
+  "productId": 2,
   "quantity": 12,
   "type": "IN",
   "reason": "Initial stock"
@@ -57,7 +68,7 @@ POST {{host}}/api/stock
 Content-Type: application/json
 
 {
-  "productId": 2,
+  "productId": 3,
   "quantity": 24,
   "type": "IN",
   "reason": "Initial stock"
@@ -66,12 +77,12 @@ Content-Type: application/json
 ###
 
 ### Consultar stock Ron
-GET {{host}}/api/stock/1
+GET {{host}}/api/stock/2
 
 ###
 
 ### Consultar stock Cerveza
-GET {{host}}/api/stock/2
+GET {{host}}/api/stock/3
 
 ###
 
@@ -87,11 +98,11 @@ Content-Type: application/json
   "paymentMethod": "Efectivo",
   "items": [
     {
-      "productId": 1,
+      "productId": 2,
       "quantity": 2
     },
     {
-      "productId": 2,
+      "productId": 3,
       "quantity": 3
     }
   ]
@@ -105,11 +116,11 @@ GET {{host}}/api/sales
 ###
 
 ### Consultar stock después de la venta
-GET {{host}}/api/stock/1
+GET {{host}}/api/stock/2
 
 ###
 
-GET {{host}}/api/stock/2
+GET {{host}}/api/stock/3
 
 ###
 
@@ -158,7 +169,7 @@ Content-Type: application/json
   "paymentMethod": "Nequi",
   "items": [
     {
-      "productId": 1,
+      "productId": 2,
       "quantity": 100   
     }
   ]

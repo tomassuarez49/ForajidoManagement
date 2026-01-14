@@ -1,15 +1,62 @@
 public class ExpenseService
 {
-    private static List<Expense> expenses = new();
-    private static int nextId = 1;
+    private readonly AppDbContext _context;
 
+    //  Inyección de dependencias
+    public ExpenseService(AppDbContext context)
+    {
+        _context = context;
+    }
+
+    //  CREATE
     public Expense Create(Expense expense)
     {
-        expense.Id = nextId++;
         expense.Date = DateTime.UtcNow;
-        expenses.Add(expense);
+
+        _context.Expenses.Add(expense);
+        _context.SaveChanges();
+
         return expense;
     }
 
-    public List<Expense> GetAll() => expenses;
+    //  GET ALL
+    public List<Expense> GetAll()
+    {
+        return _context.Expenses
+            .OrderByDescending(e => e.Date)
+            .ToList();
+    }
+
+    //  GET BY ID (útil para update/delete)
+    public Expense? GetById(int id)
+    {
+        return _context.Expenses.FirstOrDefault(e => e.Id == id);
+    }
+
+    //  UPDATE
+    public bool Update(int id, Expense updated)
+    {
+        var expense = GetById(id);
+        if (expense == null)
+            return false;
+
+        expense.Amount = updated.Amount;
+        expense.Category = updated.Category;
+        expense.Description = updated.Description;
+
+        _context.SaveChanges();
+        return true;
+    }
+
+    //  DELETE
+    public bool Delete(int id)
+    {
+        var expense = GetById(id);
+        if (expense == null)
+            return false;
+
+        _context.Expenses.Remove(expense);
+        _context.SaveChanges();
+        return true;
+    }
 }
