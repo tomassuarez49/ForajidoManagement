@@ -1,0 +1,165 @@
+@host = http://localhost:5297
+
+############################################
+### PRODUCTS
+############################################
+
+### Crear producto
+POST {{host}}/api/products
+Content-Type: application/json
+
+{
+  "name": "Ron Medellín",
+  "category": "Licor",
+  "purchasePrice": 32000,
+  "salePrice": 45000
+}
+
+###
+
+### Crear otro producto
+POST {{host}}/api/products
+Content-Type: application/json
+
+{
+  "name": "Cerveza Club Colombia",
+  "category": "Bebida",
+  "purchasePrice": 2500,
+  "salePrice": 6000
+}
+
+###
+
+### Obtener todos los productos
+GET {{host}}/api/products
+
+###
+
+############################################
+### STOCK (MOVIMIENTOS)
+############################################
+
+### Cargar stock inicial Ron (IN)
+POST {{host}}/api/stock
+Content-Type: application/json
+
+{
+  "productId": 1,
+  "quantity": 12,
+  "type": "IN",
+  "reason": "Initial stock"
+}
+
+###
+
+### Cargar stock inicial Cerveza (IN)
+POST {{host}}/api/stock
+Content-Type: application/json
+
+{
+  "productId": 2,
+  "quantity": 24,
+  "type": "IN",
+  "reason": "Initial stock"
+}
+
+###
+
+### Consultar stock Ron
+GET {{host}}/api/stock/1
+
+###
+
+### Consultar stock Cerveza
+GET {{host}}/api/stock/2
+
+###
+
+############################################
+### SALES (INGRESOS)
+############################################
+
+### Registrar una venta
+POST {{host}}/api/sales
+Content-Type: application/json
+
+{
+  "paymentMethod": "Efectivo",
+  "items": [
+    {
+      "productId": 1,
+      "quantity": 2
+    },
+    {
+      "productId": 2,
+      "quantity": 3
+    }
+  ]
+}
+
+###
+
+### Ver todas las ventas
+GET {{host}}/api/sales
+
+###
+
+### Consultar stock después de la venta
+GET {{host}}/api/stock/1
+
+###
+
+GET {{host}}/api/stock/2
+
+###
+
+############################################
+### EXPENSES (EGRESOS)
+############################################
+
+### Registrar un gasto
+POST {{host}}/api/expenses
+Content-Type: application/json
+
+{
+  "amount": 180000,
+  "category": "Insumos",
+  "description": "Compra syrup y licores"
+}
+
+###
+
+### Registrar otro gasto
+POST {{host}}/api/expenses
+Content-Type: application/json
+
+{
+  "amount": 750000,
+  "category": "Arriendo",
+  "description": "Canon mensual"
+}
+
+###
+
+### Ver todos los gastos
+GET {{host}}/api/expenses
+
+###
+
+############################################
+### VALIDACIONES (PRUEBAS DE ERROR)
+############################################
+
+### Intentar vender más stock del disponible (debe fallar)
+POST {{host}}/api/sales
+Content-Type: application/json
+
+{
+  "paymentMethod": "Nequi",
+  "items": [
+    {
+      "productId": 1,
+      "quantity": 100   
+    }
+  ]
+}
