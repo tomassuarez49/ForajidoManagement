@@ -21,7 +21,7 @@ builder.Services.AddScoped<SaleService>();
 builder.Services.AddScoped<ExpenseService>();
 builder.Services.AddScoped<BalanceService>();
 
-
+///3
 
 var app = builder.Build();
 
