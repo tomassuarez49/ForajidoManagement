@@ -18,6 +18,18 @@ public class ProductsController : ControllerBase
     public IActionResult GetAll()
         => Ok(_service.GetAll());
 
+    [HttpGet("{id}")]
+    public IActionResult GetById(int id)
+    {
+        var product = _service.GetById(id);
+
+        if (product == null)
+            return NotFound();
+
+        return Ok(product);
+    }
+
+
     // ✅ UPDATE
     [HttpPut("{id}")]
     public IActionResult Update(int id, Product product)

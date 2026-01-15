@@ -4,7 +4,7 @@
 ### PRODUCTS
 ############################################
 
-### Crear producto
+### Crear producto válido DONE
 POST {{host}}/api/products
 Content-Type: application/json
 
@@ -17,7 +17,7 @@ Content-Type: application/json
 
 ###
 
-### Crear otro producto
+### Crear otro producto válido
 POST {{host}}/api/products
 Content-Type: application/json
 
@@ -28,21 +28,41 @@ Content-Type: application/json
   "salePrice": 6000
 }
 
-### Crear otro producto
+###
+
+### Crear producto con precios negativos (DEBE FALLAR) no falla
 POST {{host}}/api/products
 Content-Type: application/json
 
 {
-  "name": "Cerveza Club Colombia Trigo",
-  "category": "Bebida",
-  "purchasePrice": 2500,
-  "salePrice": 6000
+  "name": "Producto Raro",
+  "category": "Test",
+  "purchasePrice": -1000,
+  "salePrice": -500
 }
 
 ###
 
-### Obtener todos los productos
+### Crear producto sin nombre (DEBE FALLAR) no falla
+POST {{host}}/api/products
+Content-Type: application/json
+
+{
+  "name": "",
+  "category": "Licor",
+  "purchasePrice": 1000,
+  "salePrice": 2000
+}
+
+###
+
+### Obtener todos los productos DONE
 GET {{host}}/api/products
+
+###
+
+### Obtener producto inexistente (404) DONE
+GET {{host}}/api/products/9999
 
 ###
 
@@ -50,13 +70,13 @@ GET {{host}}/api/products
 ### STOCK (MOVIMIENTOS)
 ############################################
 
-### Cargar stock inicial Ron (IN)
+### Cargar stock inicial Ron (IN) DONE
 POST {{host}}/api/stock
 Content-Type: application/json
 
 {
-  "productId": 2,
-  "quantity": 12,
+  "productId": 5,
+  "quantity": 112,
   "type": "IN",
   "reason": "Initial stock"
 }
@@ -68,7 +88,7 @@ POST {{host}}/api/stock
 Content-Type: application/json
 
 {
-  "productId": 3,
+  "productId": 8,
   "quantity": 24,
   "type": "IN",
   "reason": "Initial stock"
@@ -76,13 +96,52 @@ Content-Type: application/json
 
 ###
 
-### Consultar stock Ron
-GET {{host}}/api/stock/2
+### Cargar stock con cantidad negativa (DEBE FALLAR) NO FALLA
+POST {{host}}/api/stock
+Content-Type: application/json
+
+{
+  "productId": 1,
+  "quantity": -5,
+  "type": "IN",
+  "reason": "Bug test"
+}
 
 ###
 
-### Consultar stock Cerveza
-GET {{host}}/api/stock/3
+### Registrar salida sin stock suficiente (DEBE FALLAR) NO FALLA
+POST {{host}}/api/stock
+Content-Type: application/json
+
+{
+  "productId": 5,
+  "quantity": 100,
+  "type": "OUT",
+  "reason": "Venta fantasma"
+}
+
+###
+
+### Registrar movimiento con tipo inválido (DEBE FALLAR) NO PROBADO
+POST {{host}}/api/stock
+Content-Type: application/json
+
+{
+  "productId": 1,
+  "quantity": 2,
+  "type": "REMOVE",
+  "reason": "Hack"
+}
+
+###
+
+### Consultar stock Ron DONE
+GET {{host}}/api/stock/8
+
+###
+
+### Consultar stock producto inexistente (404) DONE
+GET {{host}}/api/stock/9999
 
 ###
 
@@ -90,7 +149,7 @@ GET {{host}}/api/stock/3
 ### SALES (INGRESOS)
 ############################################
 
-### Registrar una venta
+### Registrar venta válida (afecta stock) DONE
 POST {{host}}/api/sales
 Content-Type: application/json
 
@@ -98,11 +157,11 @@ Content-Type: application/json
   "paymentMethod": "Efectivo",
   "items": [
     {
-      "productId": 2,
+      "productId": 5,
       "quantity": 2
     },
     {
-      "productId": 3,
+      "productId": 8,
       "quantity": 3
     }
   ]
@@ -110,17 +169,76 @@ Content-Type: application/json
 
 ###
 
-### Ver todas las ventas
+### Registrar venta sin items (DEBE FALLAR) NO PRO
+POST {{host}}/api/sales
+Content-Type: application/json
+
+{
+  "paymentMethod": "Nequi",
+  "items": []
+}
+
+###
+
+### Registrar venta con cantidad 0 (DEBE FALLAR) NO PRO
+POST {{host}}/api/sales
+Content-Type: application/json
+
+{
+  "paymentMethod": "Daviplata",
+  "items": [
+    {
+      "productId": 1,
+      "quantity": 0
+    }
+  ]
+}
+
+###
+
+### NO PRO Registrar venta con producto inexistente (DEBE FALLAR)
+POST {{host}}/api/sales
+Content-Type: application/json
+
+{
+  "paymentMethod": "Efectivo",
+  "items": [
+    {
+      "productId": 9999,
+      "quantity": 1
+    }
+  ]
+}
+
+###
+
+### NO PRO Intentar vender más stock del disponible (DEBE FALLAR)
+POST {{host}}/api/sales
+Content-Type: application/json
+
+{
+  "paymentMethod": "Nequi",
+  "items": [
+    {
+      "productId": 1,
+      "quantity": 100
+    }
+  ]
+}
+
+###
+
+### Ver todas las ventas FALTA ITEMS
 GET {{host}}/api/sales
 
 ###
 
-### Consultar stock después de la venta
-GET {{host}}/api/stock/2
+### Consultar stock después de ventas DONE
+GET {{host}}/api/stock/5
 
 ###
 
-GET {{host}}/api/stock/3
+GET {{host}}/api/stock/8
 
 ###
 
@@ -128,7 +246,7 @@ GET {{host}}/api/stock/3
 ### EXPENSES (EGRESOS)
 ############################################
 
-### Registrar un gasto
+### Registrar gasto válido DONE
 POST {{host}}/api/expenses
 Content-Type: application/json
 
@@ -140,37 +258,57 @@ Content-Type: application/json
 
 ###
 
-### Registrar otro gasto
+### Registrar gasto sin monto (DEBE FALLAR) NO PRO  
 POST {{host}}/api/expenses
 Content-Type: application/json
 
 {
-  "amount": 750000,
-  "category": "Arriendo",
-  "description": "Canon mensual"
+  "amount": 0,
+  "category": "Insumos",
+  "description": "Nada"
 }
 
 ###
 
-### Ver todos los gastos
+### Registrar gasto negativo (DEBE FALLAR) NO PRO
+POST {{host}}/api/expenses
+Content-Type: application/json
+
+{
+  "amount": -50000,
+  "category": "Hack",
+  "description": "Intento raro"
+}
+
+###
+
+### Registrar gasto sin categoría (DEBE FALLAR) NO PRO
+POST {{host}}/api/expenses
+Content-Type: application/json
+
+{
+  "amount": 50000,
+  "category": "",
+  "description": "Sin categoría"
+}
+
+###
+
+### Ver todos los gastos DONE
 GET {{host}}/api/expenses
 
 ###
 
 ############################################
-### VALIDACIONES (PRUEBAS DE ERROR)
+### CONSISTENCIA GENERAL
 ############################################
 
-### Intentar vender más stock del disponible (debe fallar)
-POST {{host}}/api/sales
-Content-Type: application/json
+### Ver productos finales DONE
+GET {{host}}/api/products
 
-{
-  "paymentMethod": "Nequi",
-  "items": [
-    {
-      "productId": 2,
-      "quantity": 100   
-    }
-  ]
-}
+###
+### Obtener balance bruto DONE
+GET {{host}}/api/balance
+
+### Obtener balance neto DONE
+GET {{host}}/api/balance/real

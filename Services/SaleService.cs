@@ -9,7 +9,7 @@ public class SaleService
         _context = context;
     }
 
-    // ✅ CREATE SALE
+    //  CREATE SALE
     public Sale Create(Sale sale)
     {
         sale.Id = Guid.NewGuid();
@@ -19,7 +19,7 @@ public class SaleService
 
         foreach (var item in sale.Items)
         {
-            // 🔍 Producto
+            //  Producto
             var product = _context.Products
                 .AsNoTracking()
                 .FirstOrDefault(p => p.Id == item.ProductId);
@@ -27,7 +27,7 @@ public class SaleService
             if (product == null)
                 throw new Exception("Producto no existe");
 
-            // 📦 Stock actual
+            //  Stock actual
             var stock = _context.StockMovements
                 .AsNoTracking()
                 .Where(m => m.ProductId == item.ProductId)
@@ -36,7 +36,7 @@ public class SaleService
             if (stock < item.Quantity)
                 throw new Exception("Stock insuficiente");
 
-            // 💰 Precio y relación
+            //  Precio y relación
             item.Id = Guid.NewGuid();
             item.SaleId = sale.Id;
             item.UnitPrice = product.SalePrice;
@@ -46,10 +46,10 @@ public class SaleService
 
         sale.Total = total;
 
-        // 💾 Guardar venta
+        //  Guardar venta
         _context.Sales.Add(sale);
 
-        // 📉 Movimientos de stock
+        //  Movimientos de stock
         foreach (var item in sale.Items)
         {
             _context.StockMovements.Add(new StockMovement
@@ -63,26 +63,67 @@ public class SaleService
             });
         }
 
-        // 🚀 Un solo SaveChanges (sin batching peligroso)
+        //  Un solo SaveChanges (sin batching peligroso)
         _context.SaveChanges();
 
         return sale;
     }
 
-    // ✅ GET ALL SALES
-    public List<Sale> GetAll()
+    //  GET ALL SALES
+    public List<object> GetAll()
     {
         return _context.Sales
+            .Include(s => s.Items)
             .AsNoTracking()
             .OrderByDescending(s => s.Date)
-            .ToList();
+            .Select(s => new
+            {
+                s.Id,
+                s.Date,
+                s.Total,
+                s.PaymentMethod,
+                Items = s.Items.Select(i => new
+                {
+                    i.ProductId,
+                    ProductName = _context.Products
+                        .Where(p => p.Id == i.ProductId)
+                        .Select(p => p.Name)
+                        .FirstOrDefault(),
+                    i.Quantity,
+                    i.UnitPrice
+                })
+            })
+            .ToList<object>();
     }
 
-    // ✅ GET SALE BY ID (GUID)
-    public Sale? GetById(Guid id)
+
+
+    //  GET SALE BY ID (GUID)
+    public object? GetById(Guid id)
     {
         return _context.Sales
+            .Include(s => s.Items)
             .AsNoTracking()
-            .FirstOrDefault(s => s.Id == id);
+            .Where(s => s.Id == id)
+            .Select(s => new
+            {
+                s.Id,
+                s.Date,
+                s.Total,
+                s.PaymentMethod,
+                Items = s.Items.Select(i => new
+                {
+                    i.ProductId,
+                    ProductName = _context.Products
+                        .Where(p => p.Id == i.ProductId)
+                        .Select(p => p.Name)
+                        .FirstOrDefault(),
+                    i.Quantity,
+                    i.UnitPrice
+                })
+            })
+            .FirstOrDefault();
     }
+
+
 }

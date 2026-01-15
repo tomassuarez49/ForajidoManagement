@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("ForajidoManagenment")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+071dea2cc52979bbf2e4448a1fcf7ead81cf2bb5")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+78a599d57ea63b853a6ee125efedc82c4f745eb1")]
 [assembly: System.Reflection.AssemblyProductAttribute("ForajidoManagenment")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ForajidoManagenment")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
