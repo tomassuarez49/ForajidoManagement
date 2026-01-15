@@ -105,8 +105,39 @@ El proyecto incluye un `Dockerfile` que:
 - .NET SDK 8
 - PostgreSQL (o conexión a Neon)
 
-### Pasos
-```bash
-dotnet restore
-dotnet run
+## 🎯 Objetivo del proyecto
 
+Este proyecto fue desarrollado con fines de:
+
+- 📌 Aprendizaje práctico en .NET  
+- 📌 Portafolio profesional  
+- 📌 Uso real en un negocio  
+- 📌 Demostración de buenas prácticas backend  
+- 📌 Preparación para entornos productivos  
+
+---
+
+## 👨‍💻 Autor
+
+**Tomás Suárez**  
+Ingeniería de Sistemas  
+Proyecto personal con enfoque real de negocio  
+
+---
+
+## 🏁 Estado del proyecto
+
+- ✅ Backend funcional  
+- ✅ Desplegado en la nube  
+- ✅ Conectado a base de datos cloud  
+- 🟡 Frontend pendiente (futura etapa)  
+
+---
+
+## 📌 Próximas mejoras
+
+- Autenticación y autorización  
+- Frontend web / móvil  
+- Reportes avanzados  
+- Exportación de datos  
+- Tests automatizados  
