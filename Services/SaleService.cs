@@ -147,6 +147,9 @@ public class SaleService
             .Include(s => s.Items)
             .FirstOrDefault(s => s.SaleGroup == saleGroup);
 
+        // 🔑 Guardar total anterior (SIEMPRE)
+        decimal previousTotal = sale?.Total ?? 0;
+
         // 2️⃣ Si no existe, crearla
         if (sale == null)
         {
@@ -157,7 +160,7 @@ public class SaleService
                 PaymentMethod = paymentMethod,
                 SaleGroup = saleGroup,
                 Total = 0,
-                Items = new List<SaleItem>() // 🔥 IMPORTANTE
+                Items = new List<SaleItem>()
             };
 
             _context.Sales.Add(sale);
@@ -189,7 +192,7 @@ public class SaleService
         };
 
         sale.Items.Add(item);
-        _context.SaleItems.Add(item); // 🔥 CLAVE ABSOLUTA
+        _context.SaleItems.Add(item);
 
         // 6️⃣ Stock OUT
         _context.StockMovements.Add(new StockMovement
@@ -205,7 +208,21 @@ public class SaleService
         // 7️⃣ Recalcular total
         sale.Total = sale.Items.Sum(i => i.Quantity * i.UnitPrice);
 
-        // 🔥 FORZAR UPDATE DE SALE
+        // 8️⃣ Registrar SOLO la diferencia en caja
+        var diff = sale.Total - previousTotal;
+
+        if (diff > 0)
+        {
+            _context.CashMovements.Add(new CashMovement
+            {
+                Id = Guid.NewGuid(),
+                Amount = diff,
+                Type = "IN",
+                Description = "Venta"
+            });
+        }
+
+        // 🔥 Forzar update
         _context.Entry(sale).State = EntityState.Modified;
 
         _context.SaveChanges();
