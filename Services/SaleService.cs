@@ -127,13 +127,13 @@ public class SaleService
 
 
     public Sale AddItem(
-        string saleGroup,
-        string paymentMethod,
-        int productId,
-        int quantity
-    )
+    string saleGroup,
+    string paymentMethod,
+    int productId,
+    int quantity
+)
     {
-        // 1️⃣ Buscar venta existente
+        // 1️⃣ Buscar venta existente (TRACKED)
         var sale = _context.Sales
             .Include(s => s.Items)
             .FirstOrDefault(s => s.SaleGroup == saleGroup);
@@ -147,13 +147,14 @@ public class SaleService
                 Date = DateTime.UtcNow,
                 PaymentMethod = paymentMethod,
                 SaleGroup = saleGroup,
-                Total = 0
+                Total = 0,
+                Items = new List<SaleItem>() // 🔥 IMPORTANTE
             };
 
             _context.Sales.Add(sale);
         }
 
-        // 3️⃣ Producto
+        // 3️⃣ Producto (TRACKED)
         var product = _context.Products
             .FirstOrDefault(p => p.Id == productId);
 
@@ -179,6 +180,7 @@ public class SaleService
         };
 
         sale.Items.Add(item);
+        _context.SaleItems.Add(item); // 🔥 CLAVE ABSOLUTA
 
         // 6️⃣ Stock OUT
         _context.StockMovements.Add(new StockMovement
@@ -194,10 +196,14 @@ public class SaleService
         // 7️⃣ Recalcular total
         sale.Total = sale.Items.Sum(i => i.Quantity * i.UnitPrice);
 
+        // 🔥 FORZAR UPDATE DE SALE
+        _context.Entry(sale).State = EntityState.Modified;
+
         _context.SaveChanges();
 
         return sale;
     }
+
 
 
 }
