@@ -126,4 +126,78 @@ public class SaleService
     }
 
 
+    public Sale AddItem(
+        string saleGroup,
+        string paymentMethod,
+        int productId,
+        int quantity
+    )
+    {
+        // 1️⃣ Buscar venta existente
+        var sale = _context.Sales
+            .Include(s => s.Items)
+            .FirstOrDefault(s => s.SaleGroup == saleGroup);
+
+        // 2️⃣ Si no existe, crearla
+        if (sale == null)
+        {
+            sale = new Sale
+            {
+                Id = Guid.NewGuid(),
+                Date = DateTime.UtcNow,
+                PaymentMethod = paymentMethod,
+                SaleGroup = saleGroup,
+                Total = 0
+            };
+
+            _context.Sales.Add(sale);
+        }
+
+        // 3️⃣ Producto
+        var product = _context.Products
+            .FirstOrDefault(p => p.Id == productId);
+
+        if (product == null)
+            throw new Exception("Producto no existe");
+
+        // 4️⃣ Stock actual
+        var stock = _context.StockMovements
+            .Where(m => m.ProductId == productId)
+            .Sum(m => m.Type == "IN" ? m.Quantity : -m.Quantity);
+
+        if (stock < quantity)
+            throw new Exception("Stock insuficiente");
+
+        // 5️⃣ Crear item
+        var item = new SaleItem
+        {
+            Id = Guid.NewGuid(),
+            SaleId = sale.Id,
+            ProductId = productId,
+            Quantity = quantity,
+            UnitPrice = product.SalePrice
+        };
+
+        sale.Items.Add(item);
+
+        // 6️⃣ Stock OUT
+        _context.StockMovements.Add(new StockMovement
+        {
+            Id = Guid.NewGuid(),
+            ProductId = productId,
+            Quantity = quantity,
+            Type = "OUT",
+            Reason = "Sale",
+            Date = DateTime.UtcNow
+        });
+
+        // 7️⃣ Recalcular total
+        sale.Total = sale.Items.Sum(i => i.Quantity * i.UnitPrice);
+
+        _context.SaveChanges();
+
+        return sale;
+    }
+
+
 }

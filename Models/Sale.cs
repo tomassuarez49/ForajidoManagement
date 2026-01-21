@@ -16,5 +16,8 @@ public class Sale
     public string PaymentMethod { get; set; } = string.Empty;
     // Efectivo, Nequi, Daviplata
 
+
+    public string? SaleGroup { get; set; }
+
     public List<SaleItem> Items { get; set; } = new();
 }

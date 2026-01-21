@@ -38,5 +38,23 @@ public class SalesController : ControllerBase
 
         return Ok(sale);
     }
+
+    [HttpPost("item")]
+    public IActionResult AddItem(dynamic body)
+    {
+        try
+        {
+            return Ok(_service.AddItem(
+                body.saleGroup,
+                body.paymentMethod,
+                (int)body.productId,
+                (int)body.quantity
+            ));
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
 }
 
