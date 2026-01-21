@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
@@ -40,15 +41,20 @@ public class SalesController : ControllerBase
     }
 
     [HttpPost("item")]
-    public IActionResult AddItem(dynamic body)
+    public IActionResult AddItem([FromBody] JsonElement body)
     {
         try
         {
+            var saleGroup = body.GetProperty("saleGroup").GetString()!;
+            var paymentMethod = body.GetProperty("paymentMethod").GetString()!;
+            var productId = body.GetProperty("productId").GetInt32();
+            var quantity = body.GetProperty("quantity").GetInt32();
+
             return Ok(_service.AddItem(
-                body.saleGroup,
-                body.paymentMethod,
-                (int)body.productId,
-                (int)body.quantity
+                saleGroup,
+                paymentMethod,
+                productId,
+                quantity
             ));
         }
         catch (Exception ex)
@@ -56,5 +62,6 @@ public class SalesController : ControllerBase
             return BadRequest(ex.Message);
         }
     }
+
 }
 
