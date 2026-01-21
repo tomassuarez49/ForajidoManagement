@@ -14,6 +14,16 @@ public class ExpenseService
         expense.Date = DateTime.UtcNow;
 
         _context.Expenses.Add(expense);
+
+        _context.CashMovements.Add(new CashMovement
+        {
+            Id = Guid.NewGuid(),
+            Amount = expense.Amount,
+            Type = "OUT",
+            Description = $"Gasto: {expense.Category}"
+        });
+
+
         _context.SaveChanges();
 
         return expense;

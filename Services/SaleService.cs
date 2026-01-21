@@ -46,6 +46,15 @@ public class SaleService
 
         sale.Total = total;
 
+        _context.CashMovements.Add(new CashMovement
+        {
+            Id = Guid.NewGuid(),
+            Amount = sale.Total,
+            Type = "IN",
+            Description = "Venta"
+        });
+
+
         //  Guardar venta
         _context.Sales.Add(sale);
 
