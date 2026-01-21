@@ -20,6 +20,8 @@ builder.Services.AddScoped<StockMovementService>();
 builder.Services.AddScoped<SaleService>();
 builder.Services.AddScoped<ExpenseService>();
 builder.Services.AddScoped<BalanceService>();
+builder.Services.AddScoped<CashService>();
+
 
 ///3
 
