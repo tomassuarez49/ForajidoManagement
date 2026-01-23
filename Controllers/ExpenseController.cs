@@ -6,39 +6,29 @@ public class ExpensesController : ControllerBase
 {
     private readonly ExpenseService _service;
 
-    //  Inyección de dependencias
     public ExpensesController(ExpenseService service)
     {
         _service = service;
     }
 
-    //  CREATE
     [HttpPost]
-    public IActionResult Create(Expense expense)
-    {
-        var created = _service.Create(expense);
-        return Ok(created);
-    }
+    public IActionResult Create(CreateExpenseDto dto)
+        => Ok(_service.Create(dto));
 
-    //  GET ALL
     [HttpGet]
     public IActionResult GetAll()
-    {
-        return Ok(_service.GetAll());
-    }
+        => Ok(_service.GetAll());
 
-    //  UPDATE
     [HttpPut("{id}")]
-    public IActionResult Update(int id, Expense expense)
+    public IActionResult Update(int id, UpdateExpenseDto dto)
     {
-        var updated = _service.Update(id, expense);
+        var updated = _service.Update(id, dto);
         if (!updated)
             return NotFound();
 
-        return NoContent(); // 204
+        return NoContent();
     }
 
-    //  DELETE
     [HttpDelete("{id}")]
     public IActionResult Delete(int id)
     {
@@ -46,6 +36,6 @@ public class ExpensesController : ControllerBase
         if (!deleted)
             return NotFound();
 
-        return NoContent(); // 204
+        return NoContent();
     }
 }

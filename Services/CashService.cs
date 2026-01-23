@@ -14,10 +14,27 @@ public class CashService
         );
     }
 
-    public void Add(CashMovement movement)
+    // ➕ Agregar movimiento de caja (con DTO)
+    public CashMovementResponseDto Add(CreateCashMovementDto dto)
     {
-        movement.Id = Guid.NewGuid();
+        var movement = new CashMovement
+        {
+            Id = Guid.NewGuid(),
+            Date = DateTime.UtcNow,
+            Amount = dto.Amount,
+            Type = dto.Type,
+            Description = dto.Description
+        };
+
         _context.CashMovements.Add(movement);
         _context.SaveChanges();
+
+        return new CashMovementResponseDto
+        {
+            Date = movement.Date,
+            Amount = movement.Amount,
+            Type = movement.Type,
+            Description = movement.Description
+        };
     }
 }

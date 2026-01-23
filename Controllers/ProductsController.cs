@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+
 [ApiController]
 [Route("api/products")]
 public class ProductsController : ControllerBase
@@ -11,8 +12,8 @@ public class ProductsController : ControllerBase
     }
 
     [HttpPost]
-    public IActionResult Create(Product product)
-        => Ok(_service.Create(product));
+    public IActionResult Create(CreateProductDto dto)
+        => Ok(_service.Create(dto));
 
     [HttpGet]
     public IActionResult GetAll()
@@ -22,26 +23,22 @@ public class ProductsController : ControllerBase
     public IActionResult GetById(int id)
     {
         var product = _service.GetById(id);
-
         if (product == null)
             return NotFound();
 
         return Ok(product);
     }
 
-
-    // ✅ UPDATE
     [HttpPut("{id}")]
-    public IActionResult Update(int id, Product product)
+    public IActionResult Update(int id, UpdateProductDto dto)
     {
-        var updated = _service.Update(id, product);
+        var updated = _service.Update(id, dto);
         if (!updated)
             return NotFound();
 
-        return NoContent(); // 204
+        return NoContent();
     }
 
-    // ✅ DELETE
     [HttpDelete("{id}")]
     public IActionResult Delete(int id)
     {
@@ -49,6 +46,6 @@ public class ProductsController : ControllerBase
         if (!deleted)
             return NotFound();
 
-        return NoContent(); // 204
+        return NoContent();
     }
 }

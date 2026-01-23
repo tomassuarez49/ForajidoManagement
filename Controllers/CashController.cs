@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 
-
 [ApiController]
 [Route("api/cash")]
 public class CashController : ControllerBase
@@ -17,10 +16,9 @@ public class CashController : ControllerBase
         => Ok(_service.GetCash());
 
     [HttpPost]
-    public IActionResult Add(CashMovement movement)
+    public IActionResult Add(CreateCashMovementDto dto)
     {
-        _service.Add(movement);
-        return Ok();
+        var result = _service.Add(dto);
+        return Ok(result);
     }
 }
-

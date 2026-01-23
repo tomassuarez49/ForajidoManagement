@@ -1,6 +1,5 @@
 public class StockMovementService
 {
-
     private readonly AppDbContext _context;
 
     public StockMovementService(AppDbContext context)
@@ -8,15 +7,38 @@ public class StockMovementService
         _context = context;
     }
 
-    public void AddMovement(StockMovement movement)
+    // =========================
+    // ADD MOVEMENT
+    // =========================
+    public StockMovementResponseDto AddMovement(CreateStockMovementDto dto)
     {
-        movement.Date = DateTime.UtcNow;
+        var movement = new StockMovement
+        {
+            Id = Guid.NewGuid(),
+            ProductId = dto.ProductId,
+            Quantity = dto.Quantity,
+            Type = dto.Type,
+            Reason = dto.Reason,
+            Date = DateTime.UtcNow
+        };
+
         _context.StockMovements.Add(movement);
         _context.SaveChanges();
-        
+
+        return new StockMovementResponseDto
+        {
+            Date = movement.Date,
+            ProductId = movement.ProductId,
+            Quantity = movement.Quantity,
+            Type = movement.Type,
+            Reason = movement.Reason
+        };
     }
 
-     public int GetStock(int productId)
+    // =========================
+    // GET STOCK BY PRODUCT
+    // =========================
+    public int GetStock(int productId)
     {
         var inQty = _context.StockMovements
             .Where(m => m.ProductId == productId && m.Type == "IN")
@@ -29,11 +51,22 @@ public class StockMovementService
         return inQty - outQty;
     }
 
-    public List<StockMovement> GetByProduct(int productId)
+    // =========================
+    // GET MOVEMENTS BY PRODUCT
+    // =========================
+    public List<StockMovementResponseDto> GetByProduct(int productId)
     {
         return _context.StockMovements
             .Where(m => m.ProductId == productId)
             .OrderByDescending(m => m.Date)
+            .Select(m => new StockMovementResponseDto
+            {
+                Date = m.Date,
+                ProductId = m.ProductId,
+                Quantity = m.Quantity,
+                Type = m.Type,
+                Reason = m.Reason
+            })
             .ToList();
     }
 }

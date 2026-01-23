@@ -1,15 +1,12 @@
 using System.ComponentModel.DataAnnotations.Schema;
 
-
-[Table("SaleItems")]
 public class SaleItem
 {
-    
     [Column("id")]
-    public Guid Id { get; set; } = Guid.NewGuid();         // 👈 PRIMARY KEY
+    public Guid Id { get; set; }
 
     [Column("sale_id")]
-    public Guid SaleId { get; set; }    // 👈 FK
+    public Guid SaleId { get; set; }
 
     [Column("product_id")]
     public int ProductId { get; set; }

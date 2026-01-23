@@ -9,42 +9,52 @@ public class SaleService
         _context = context;
     }
 
-    //  CREATE SALE
-    public Sale Create(Sale sale)
+    // =========================
+    // CREATE SALE
+    // =========================
+    public SaleResponseDto Create(CreateSaleDto dto)
     {
-        sale.Id = Guid.NewGuid();
-        sale.Date = DateTime.UtcNow;
+        var sale = new Sale
+        {
+            Id = Guid.NewGuid(),
+            Date = DateTime.UtcNow,
+            PaymentMethod = dto.PaymentMethod,
+            Items = new List<SaleItem>()
+        };
 
         decimal total = 0;
 
-        foreach (var item in sale.Items)
+        foreach (var dtoItem in dto.Items)
         {
-            //  Producto
             var product = _context.Products
                 .AsNoTracking()
-                .FirstOrDefault(p => p.Id == item.ProductId);
+                .FirstOrDefault(p => p.Id == dtoItem.ProductId)
+                ?? throw new Exception("Producto no existe");
 
-            if (product == null)
-                throw new Exception("Producto no existe");
-
-            //  Stock actual
             var stock = _context.StockMovements
                 .AsNoTracking()
-                .Where(m => m.ProductId == item.ProductId)
+                .Where(m => m.ProductId == dtoItem.ProductId)
                 .Sum(m => m.Type == "IN" ? m.Quantity : -m.Quantity);
 
-            if (stock < item.Quantity)
+            if (stock < dtoItem.Quantity)
                 throw new Exception("Stock insuficiente");
 
-            //  Precio y relación
-            item.Id = Guid.NewGuid();
-            item.SaleId = sale.Id;
-            item.UnitPrice = product.SalePrice;
+            var item = new SaleItem
+            {
+                Id = Guid.NewGuid(),
+                SaleId = sale.Id,
+                ProductId = dtoItem.ProductId,
+                Quantity = dtoItem.Quantity,
+                UnitPrice = product.SalePrice
+            };
 
+            sale.Items.Add(item);
             total += item.Quantity * item.UnitPrice;
         }
 
         sale.Total = total;
+
+        _context.Sales.Add(sale);
 
         _context.CashMovements.Add(new CashMovement
         {
@@ -54,11 +64,6 @@ public class SaleService
             Description = "Venta"
         });
 
-
-        //  Guardar venta
-        _context.Sales.Add(sale);
-
-        //  Movimientos de stock
         foreach (var item in sale.Items)
         {
             _context.StockMovements.Add(new StockMovement
@@ -72,85 +77,65 @@ public class SaleService
             });
         }
 
-        //  Un solo SaveChanges (sin batching peligroso)
         _context.SaveChanges();
 
-        return sale;
+        return MapToResponse(sale);
     }
 
-    //  GET ALL SALES
-    public List<object> GetAll()
+    // =========================
+    // GET ALL SALES
+    // =========================
+    public List<SaleResponseDto> GetAll()
     {
-        return _context.Sales
+        var sales = _context.Sales
             .Include(s => s.Items)
             .AsNoTracking()
             .OrderByDescending(s => s.Date)
-            .Select(s => new
-            {
-                s.Id,
-                s.Date,
-                s.Total,
-                s.PaymentMethod,
-                Items = s.Items.Select(i => new
-                {
-                    i.ProductId,
-                    ProductName = _context.Products
-                        .Where(p => p.Id == i.ProductId)
-                        .Select(p => p.Name)
-                        .FirstOrDefault(),
-                    i.Quantity,
-                    i.UnitPrice
-                })
-            })
-            .ToList<object>();
+            .ToList();
+
+        var productNames = _context.Products
+            .AsNoTracking()
+            .ToDictionary(p => p.Id, p => p.Name);
+
+        return sales.Select(s => MapToResponse(s, productNames)).ToList();
     }
 
-
-
-    //  GET SALE BY ID (GUID)
-    public object? GetById(Guid id)
+    // =========================
+    // GET SALE BY ID
+    // =========================
+    public SaleResponseDto? GetById(Guid id)
     {
-        return _context.Sales
+        var sale = _context.Sales
             .Include(s => s.Items)
             .AsNoTracking()
-            .Where(s => s.Id == id)
-            .Select(s => new
-            {
-                s.Id,
-                s.Date,
-                s.Total,
-                s.PaymentMethod,
-                Items = s.Items.Select(i => new
-                {
-                    i.ProductId,
-                    ProductName = _context.Products
-                        .Where(p => p.Id == i.ProductId)
-                        .Select(p => p.Name)
-                        .FirstOrDefault(),
-                    i.Quantity,
-                    i.UnitPrice
-                })
-            })
-            .FirstOrDefault();
+            .FirstOrDefault(s => s.Id == id);
+
+        if (sale == null)
+            return null;
+
+        var productNames = _context.Products
+            .AsNoTracking()
+            .ToDictionary(p => p.Id, p => p.Name);
+
+        return MapToResponse(sale, productNames);
     }
 
-
-    public Sale AddItem(
-    string saleGroup,
-    string paymentMethod,
-    int productId,
-    int quantity
-)
+    // =========================
+    // ADD ITEM (VENTA INCREMENTAL)
+    // =========================
+    public SaleResponseDto AddItem(
+        string saleGroup,
+        string paymentMethod,
+        int productId,
+        int quantity
+    )
     {
-        // 1️⃣ Buscar venta existente (TRACKED)
         var sale = _context.Sales
             .Include(s => s.Items)
             .FirstOrDefault(s => s.SaleGroup == saleGroup);
 
-        // 🔑 Guardar total anterior (SIEMPRE)
         decimal previousTotal = sale?.Total ?? 0;
 
-        // 2️⃣ Si no existe, crearla
         if (sale == null)
         {
             sale = new Sale
@@ -166,14 +151,10 @@ public class SaleService
             _context.Sales.Add(sale);
         }
 
-        // 3️⃣ Producto (TRACKED)
         var product = _context.Products
-            .FirstOrDefault(p => p.Id == productId);
+            .FirstOrDefault(p => p.Id == productId)
+            ?? throw new Exception("Producto no existe");
 
-        if (product == null)
-            throw new Exception("Producto no existe");
-
-        // 4️⃣ Stock actual
         var stock = _context.StockMovements
             .Where(m => m.ProductId == productId)
             .Sum(m => m.Type == "IN" ? m.Quantity : -m.Quantity);
@@ -181,7 +162,6 @@ public class SaleService
         if (stock < quantity)
             throw new Exception("Stock insuficiente");
 
-        // 5️⃣ Crear item
         var item = new SaleItem
         {
             Id = Guid.NewGuid(),
@@ -194,7 +174,6 @@ public class SaleService
         sale.Items.Add(item);
         _context.SaleItems.Add(item);
 
-        // 6️⃣ Stock OUT
         _context.StockMovements.Add(new StockMovement
         {
             Id = Guid.NewGuid(),
@@ -205,10 +184,8 @@ public class SaleService
             Date = DateTime.UtcNow
         });
 
-        // 7️⃣ Recalcular total
         sale.Total = sale.Items.Sum(i => i.Quantity * i.UnitPrice);
 
-        // 8️⃣ Registrar SOLO la diferencia en caja
         var diff = sale.Total - previousTotal;
 
         if (diff > 0)
@@ -222,14 +199,46 @@ public class SaleService
             });
         }
 
-        // 🔥 Forzar update
-        _context.Entry(sale).State = EntityState.Modified;
-
         _context.SaveChanges();
 
-        return sale;
+        var productNames = _context.Products
+            .AsNoTracking()
+            .ToDictionary(p => p.Id, p => p.Name);
+
+        return MapToResponse(sale, productNames);
     }
 
+    // =========================
+    // MAPPING (DTO PURO)
+    // =========================
+    private SaleResponseDto MapToResponse(
+        Sale sale,
+        Dictionary<int, string> productNames
+    )
+    {
+        return new SaleResponseDto
+        {
+            Id = sale.Id,
+            Date = sale.Date,
+            Total = sale.Total,
+            PaymentMethod = sale.PaymentMethod,
+            Items = sale.Items.Select(i => new SaleItemResponseDto
+            {
+                ProductId = i.ProductId,
+                ProductName = productNames.GetValueOrDefault(i.ProductId, ""),
+                Quantity = i.Quantity,
+                UnitPrice = i.UnitPrice
+            }).ToList()
+        };
+    }
 
+    // Overload para Create (cuando aún no hay diccionario)
+    private SaleResponseDto MapToResponse(Sale sale)
+    {
+        var productNames = _context.Products
+            .AsNoTracking()
+            .ToDictionary(p => p.Id, p => p.Name);
 
+        return MapToResponse(sale, productNames);
+    }
 }
